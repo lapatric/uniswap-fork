@@ -17,17 +17,17 @@ We then write a [deploy script](./v2-core-fork/deploy/deploy-contracts.js) to de
 Deploying two identical contracts with differing constructor arguments can be done very easily by inside Hardhat by specifying the same contract artifact but different deployment names.
 
 ```javascript
-    await deploy("TokenA", {
-        from: deployer,
-        contract: "TokenERC20",
-        ...
-    });
+await deploy("TokenA", {
+    from: deployer,
+    contract: "TokenERC20",
+    ...
+});
 
-    await deploy("TokenB", {
-        from: deployer,
-        contract: "TokenERC20",
-        ...
-    });
+await deploy("TokenB", {
+    from: deployer,
+    contract: "TokenERC20",
+    ...
+});
 ```
 
 The market is created inside the [`create_market.js`](./v2-core-fork/scripts/create_market.js) script as follows.
