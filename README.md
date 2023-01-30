@@ -10,7 +10,7 @@ To clone the factory contract from Uniswap we clone the `v2-core` repository and
 
 ```bash
 git clone https://github.com/Uniswap/v2-core
-cp -r v2-core/contracts/* v2-core-fork
+cp -r v2-core/contracts v2-core-fork
 ```
 
 We then write a [deploy script](./v2-core-fork/deploy/deploy-contracts.js) to deploy our cloned factory contract. Additionally, we deploy two ERC20 token contracts (implemented [here](./v2-core-fork/contracts/TokenERC20.sol)) which we use to create a market (trading pair). 
