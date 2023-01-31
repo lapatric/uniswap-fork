@@ -21,6 +21,10 @@ module.exports = {
         runs: 99999,
       },
     },
+    overrides: {
+      'node_modules/\@uniswap/lib/contracts/libraries/BitMath.sol': { version: "0.6.6" }, // not respected for node_modules it appears
+      'node_modules/\@uniswap/lib/contracts/libraries/FullMath.sol': { version: "0.6.6" }, // not respected for node_modules it appears
+    },
   },
   defaultNetwork: "hardhat",
   networks: {
