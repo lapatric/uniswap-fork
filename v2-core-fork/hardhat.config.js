@@ -34,7 +34,8 @@ module.exports = {
       mining: {
         auto: true, // set to FALSE when testing frontend for a more realistic experience!
         interval: [3000, 6000] // only relevant when {auto: FALSE}
-      }
+      },
+      allowUnlimitedContractSize: true
     },
     goerli: {
       chainId: 5,
