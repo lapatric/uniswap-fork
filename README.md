@@ -14,7 +14,7 @@ mkdir contracts/core
 cp -r v2-core/contracts v2-core-fork/contracts/core
 ```
 
-We then write a [deploy script](./v2-core-fork/deploy/deploy-contracts.js) to deploy our cloned factory contract. Additionally, we deploy two ERC20 token contracts (implemented [here](./v2-core-fork/contracts/TokenERC20.sol)) which we use to create a market (trading pair). Note that our ERC20 contract makes use of the `@openzeppelin/contracts` library which we must install using `yarn add --dev @openzeppelin/contracts`.
+We then write a [deploy script](deploy/deploy-contracts.js) to deploy our cloned factory contract. Additionally, we deploy two ERC20 token contracts (implemented [here](contracts/core/TokenERC20.sol)) which we use to create a market (trading pair). Note that our ERC20 contract makes use of the `@openzeppelin/contracts` library which we must install using `yarn add --dev @openzeppelin/contracts`.
 
 Deploying two identical contracts with differing constructor arguments can be done very easily inside Hardhat by specifying the same contract artifact but different deployment names. 
 
@@ -32,7 +32,7 @@ await deploy("TokenB", {
 });
 ```
 
-The market is created inside the [`create_market.js`](./v2-core-fork/scripts/create_market.js) script as follows.
+The market is created inside the [`create_market.js`](./scripts/create_market.js) script as follows.
 
 ```javascript
 deployer = (await getNamedAccounts()).deployer;
@@ -80,3 +80,84 @@ await deploy("UniswapV2Router02", {
 });
 ```
 
+## Liquidity Bootstrapping
+
+Once our forked exchange has been deployed to the network and a trading pair has been created, we are ready add some liqudity to it. In order to do so we can entice existing liquidity providers on Uniswap (or another compatible Ethereum exchange) to migrate their liquidity over to our exchange. To do so, we offer them a reward in the form of a [`BonusToken`](contracts/migration/BonusToken.sol).
+
+### BonusToken
+
+ The BonusTokens is sent to the liquidity providers via our `LiquidityMigration` contract, which therefore needs minting rights (set via `setMigrator()`).
+
+
+```solidity
+contract BonusToken is ERC20 {
+
+    address public admin;
+    address public migrator;
+
+    constructor() ERC20('Bonus Token', 'BTK') {
+        admin = msg.sender;
+    }
+
+    function setMigrator(address _migrator) external {
+        require(msg.sender == admin, 'only admin');
+        migrator = _migrator;
+    }
+
+    function mint(address to, uint amount) external {
+        require(msg.sender == migrator, 'only migrator');
+        _mint(to, amount);
+    }
+
+}
+```
+
+### Liquidity Migration
+
+
+An existing liquidity provider over on Uniswap must transfer their LP tokens to our exchange via our [`migration contract`](contracts/migration/LiquidityMigrator.sol). This is done by calling the `deposit()` function. In return they receive some bonusTokens. At the same time, we record the amount of new LP tokens they're eligible for on our exchange. 
+
+```solidity
+function deposit(uint amount) external {
+    require(migrationDone == false, 'migration already done');
+    pair.transferFrom(msg.sender, address(this), amount);
+    bonusToken.mint(msg.sender, amount);
+    unclaimedBalances[msg.sender] += amount;
+}
+```
+
+Once enough LP tokens have been deposited, we trigger the migration via a call to `migrate()`. This fetches the underlying tokens for the received LP tokens from the respective liquidity pool over on Uniswap. The obtained tokens are then added to our trading pair via our router.
+
+```solidity
+function migrate() external {
+    require(msg.sender == admin, 'only admin');
+    require(migrationDone == false, 'migration already done');
+    IERC20 token0 = IERC20(pair.token0());
+    IERC20 token1 = IERC20(pair.token1());
+    uint totalBalance = pair.balanceOf(address(this));
+    router.removeLiquidity(address(token0), address(token1), totalBalance, 0, 0, address(this), block.timestamp);
+
+    uint token0Balance = token0.balanceOf(address(this));
+    uint token1Balance = token1.balanceOf(address(this));
+    token0.approve(address(routerFork), token0Balance);
+    token1.approve(address(routerFork), token0Balance);
+    routerFork.addLiquidity(address(token0), address(token1), token0Balance, token1Balance, token0Balance, token1Balance, address(this), block.timestamp);
+    migrationDone = true;
+}
+```
+
+Finally, our new liquidity providers can claim their new LP tokens using the `claimLpTokens()` function in the migration contract, concluding the bootstrapping of liqudity.
+
+```solidity
+function claimLpTokens() external {
+    require(unclaimedBalances[msg.sender] >= 0, 'no unclaimed balance');
+    require(migrationDone == true, 'migration not done yet');
+    uint amountToSend = unclaimedBalances[msg.sender];
+    unclaimedBalances[msg.sender] = 0;
+    pairFork.transfer(msg.sender, amountToSend);
+}
+```
+
+## Deployment
+
+To reduce the number of required scripts, the deployment of all contracts is done in a single [deployment script](deploy/deploy-contracts.js). Furthermore, this script also creates the pair (once our factory contract has been deployed) and sets the migration contract address inside our `BonusToken` contract. Note that the script is not entirely compatible with the Uniswap exchange, as it presumes the existance of a (tokenA, tokenB) trading pair on l. 60: `(await Fetcher.fetchPairData(tokenA.address, tokenB.address)).address;`. However, this could quickly be amended to work in real case scenario.
