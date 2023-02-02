@@ -5,6 +5,7 @@
     "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@openzeppelin/contracts": "^4.8.1",
     "@uniswap/lib": "^4.0.1-alpha",
+    "@uniswap/sdk": "^3.0.3",
     "@uniswap/v2-core": "^1.0.1",
     "chai": "^4.3.7",
     "dotenv": "^16.0.3",
@@ -14,8 +15,6 @@
     "hardhat-contract-sizer": "^2.7.0",
     "hardhat-deploy": "^0.11.22",
     "hardhat-gas-reporter": "^1.0.9",
-    "prettier": "^2.8.3",
-    "prettier-plugin-solidity": "^1.1.1",
     "solhint": "^3.3.8",
     "solidity-coverage": "^0.8.2"
   }

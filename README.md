@@ -14,8 +14,9 @@ mkdir contracts/core
 cp -r v2-core/contracts v2-core-fork/contracts/core
 ```
 
-We then write a [deploy script](./v2-core-fork/deploy/deploy-contracts.js) to deploy our cloned factory contract. Additionally, we deploy two ERC20 token contracts (implemented [here](./v2-core-fork/contracts/TokenERC20.sol)) which we use to create a market (trading pair). 
-Deploying two identical contracts with differing constructor arguments can be done very easily inside Hardhat by specifying the same contract artifact but different deployment names.
+We then write a [deploy script](./v2-core-fork/deploy/deploy-contracts.js) to deploy our cloned factory contract. Additionally, we deploy two ERC20 token contracts (implemented [here](./v2-core-fork/contracts/TokenERC20.sol)) which we use to create a market (trading pair). Note that our ERC20 contract makes use of the `@openzeppelin/contracts` library which we must install using `yarn add --dev @openzeppelin/contracts`.
+
+Deploying two identical contracts with differing constructor arguments can be done very easily inside Hardhat by specifying the same contract artifact but different deployment names. 
 
 ```javascript
 await deploy("TokenA", {

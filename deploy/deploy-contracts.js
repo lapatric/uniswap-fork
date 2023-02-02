@@ -1,12 +1,11 @@
 const { ethers, network } = require("hardhat");
-const { IUniswapV2Factory } = require('@uniswap/v2-core');
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deploy, log } = deployments; // https://www.npmjs.com/package/hardhat-deploy
     const { deployer } = await getNamedAccounts();
 
     console.log("------------------------------- Deploy smart contracts from contracts/core -------------------------------");
-    const factory = await deploy("UniswapV2Factory", {
+    await deploy("UniswapV2Factory", {
         from: deployer,
         args: [deployer], // constructor arguments
         log: true,
@@ -30,6 +29,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     });
 
     console.log("------------------------------- Create pair through deployed factory contract -------------------------------");
+    const factory = await ethers.getContract("UniswapV2Factory", deployer);
     const pairAddress = await factory.createPair(tokenA.address, tokenB.address);
     console.log(`Pair deployed to ${pairAddress}.`);
 
@@ -56,7 +56,6 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     });
 
     const uniswapRouterAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
-    const uniswapPairAddress = IUniswapV2Factory(uniswapRouterAddress).getPair(tokenA.address, tokenB.address);
     const liquidityMigrator = await deploy("LiquidityMigration", {
         from: deployer,
         args: [uniswapRouterAddress, uniswapPairAddress, router.address, pairAddress, bonusToken.address], // constructor arguments

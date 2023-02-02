@@ -1,2 +1,7 @@
-v2-core/
-v2-periphery/
+node_modules
+artifacts
+cache
+coverage.json
+coverage
+.env
+deployments
