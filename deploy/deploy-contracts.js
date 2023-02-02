@@ -1,4 +1,5 @@
 const { ethers, network } = require("hardhat");
+const { Fetcher } = require('@uniswap/sdk');
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deploy, log } = deployments; // https://www.npmjs.com/package/hardhat-deploy
@@ -56,6 +57,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     });
 
     const uniswapRouterAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+    const uniswapPairAddress = (await Fetcher.fetchPairData(tokenA.address, tokenB.address)).address;
     const liquidityMigrator = await deploy("LiquidityMigration", {
         from: deployer,
         args: [uniswapRouterAddress, uniswapPairAddress, router.address, pairAddress, bonusToken.address], // constructor arguments
