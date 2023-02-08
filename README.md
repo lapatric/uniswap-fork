@@ -49,9 +49,9 @@ await factory.createPair(tokenA.address, tokenB.address);
 To deploy a router contract for our forked exchange we need to clone Uniswap's [router contract](https://github.com/Uniswap/v2-periphery/blob/master/contracts/UniswapV2Router02.sol) from their `v2-periphery` repo.
 
 ```bash
-git clone https://github.com/Uniswap/v2-core
+git clone https://github.com/Uniswap/v2-periphery
 mkdir contracts/periphery
-cp -r v2-core/contracts v2-core-fork/contracts/periphery
+cp -r v2-periphery/contracts v2-core-fork/contracts/periphery
 ```
 
 Upon trying to compile this new set of contracts, we find that they require both [`@uniswap/lib`](https://github.com/Uniswap/solidity-lib) and [`uniswap/v2-core`](https://github.com/Uniswap/v2-core), which can be installed as follows.
